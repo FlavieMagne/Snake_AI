@@ -20,10 +20,14 @@ Point = namedtuple('Point', 'x, y')
 # rgb colors
 WHITE = (255, 255, 255)
 RED = (200, 0, 0)
-PINK = (255, 0, 255)
+GREEN = (85, 107, 47)
+GREEN2 = (107, 142, 35)
+PINK = (255, 105, 180)
+YELLOW = (255, 215, 0)
 BLUE1 = (0, 0, 255)
 BLUE2 = (0, 100, 255)
 BLACK = (0, 0, 0)
+GREY = (192, 192, 192)
 
 BLOCK_SIZE = 20
 SPEED = 40
@@ -52,11 +56,12 @@ class SnakeGameAI:
         self.score = 0
         self.food = None
         self.super_food = None
+        self.poison = None
         self._place_food()
         self._place_super_food()
+        self._place_poison()
         self.frame_iteration = 0
 
-    #TODO poison
     #TODO WALL
     def _place_food(self):
         x = random.randint(0, (self.w - BLOCK_SIZE) // BLOCK_SIZE) * BLOCK_SIZE
@@ -71,6 +76,13 @@ class SnakeGameAI:
         self.super_food = Point(x, y)
         if self.super_food in self.snake:
             self._place_super_food()
+
+    def _place_poison(self):
+        x = random.randint(0, (self.w - BLOCK_SIZE) // BLOCK_SIZE) * BLOCK_SIZE
+        y = random.randint(0, (self.h - BLOCK_SIZE) // BLOCK_SIZE) * BLOCK_SIZE
+        self.poison = Point(x, y)
+        if self.poison in self.snake:
+            self._place_poison()
 
     def play_step(self, action):
         self.frame_iteration += 1
@@ -102,6 +114,8 @@ class SnakeGameAI:
         elif self.head == self.super_food:
             self.score += 2
             reward = 20
+        elif self.head == self.poison:
+            reward = -20
         else:
             self.snake.pop()
         # Update UI and clock
@@ -124,14 +138,15 @@ class SnakeGameAI:
 
     def _update_ui(self):
         # update snake position in the frame
-        self.display.fill(BLACK)
+        self.display.fill(GREY)
 
         for pt in self.snake:
-            pygame.draw.rect(self.display, BLUE1, pygame.Rect(pt.x, pt.y, BLOCK_SIZE, BLOCK_SIZE))
-            pygame.draw.rect(self.display, BLUE2, pygame.Rect(pt.x + 4, pt.y + 4, 12, 12))
+            pygame.draw.rect(self.display, GREEN, pygame.Rect(pt.x, pt.y, BLOCK_SIZE, BLOCK_SIZE))
+            pygame.draw.rect(self.display, GREEN2, pygame.Rect(pt.x + 4, pt.y + 4, 12, 12))
 
-        pygame.draw.rect(self.display, RED, pygame.Rect(self.food.x, self.food.y, BLOCK_SIZE, BLOCK_SIZE))
+        pygame.draw.rect(self.display, YELLOW, pygame.Rect(self.food.x, self.food.y, BLOCK_SIZE, BLOCK_SIZE))
         pygame.draw.rect(self.display, PINK, pygame.Rect(self.super_food.x, self.super_food.y, BLOCK_SIZE, BLOCK_SIZE))
+        pygame.draw.rect(self.display, RED, pygame.Rect(self.poison.x, self.poison.y, BLOCK_SIZE, BLOCK_SIZE))
 
         text = font.render("Score: " + str(self.score), True, WHITE)
         self.display.blit(text, [0, 0])

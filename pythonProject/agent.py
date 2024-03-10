@@ -12,24 +12,22 @@ LR = 0.001
 
 
 class Agent:
+
     def __init__(self):
         self.n_games = 0
         self.epsilon = 0  # randomness
-        self.gamma = 0.9  # discount rate, must be smaller than 1
+        self.gamma = 0.9  # discount rate
         self.memory = deque(maxlen=MAX_MEMORY)  # popleft()
-        self.model = Linear_QNet(11, 256, 3)  # 3 because we have 3 different actions in output
-        self. trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
+        self.model = Linear_QNet(11, 256, 3)
+        self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
     def get_state(self, game):
         head = game.snake[0]
-
-        # Creating some points for the directions
         point_l = Point(head.x - 20, head.y)
         point_r = Point(head.x + 20, head.y)
         point_u = Point(head.x, head.y - 20)
         point_d = Point(head.x, head.y + 20)
 
-        # check if current direction equals one of those
         dir_l = game.direction == Direction.LEFT
         dir_r = game.direction == Direction.RIGHT
         dir_u = game.direction == Direction.UP
@@ -70,17 +68,18 @@ class Agent:
         return np.array(state, dtype=int)
 
     def remember(self, state, action, reward, next_state, done):
-        # popleft is MAX_MEMORY is reached
-        self.memory.append((state, action, reward, next_state, done))
+        self.memory.append((state, action, reward, next_state, done))  # popleft if MAX_MEMORY is reached
 
     def train_long_memory(self):
         if len(self.memory) > BATCH_SIZE:
-            # list of tuples
-            mini_sample = random.sample(self.memory, BATCH_SIZE)
+            mini_sample = random.sample(self.memory, BATCH_SIZE)  # list of tuples
         else:
             mini_sample = self.memory
+
         states, actions, rewards, next_states, dones = zip(*mini_sample)
         self.trainer.train_step(states, actions, rewards, next_states, dones)
+        # for state, action, reward, nexrt_state, done in mini_sample:
+        #    self.trainer.train_step(state, action, reward, next_state, done)
 
     def train_short_memory(self, state, action, reward, next_state, done):
         self.trainer.train_step(state, action, reward, next_state, done)
@@ -104,7 +103,7 @@ class Agent:
 def train():
     plot_scores = []
     plot_mean_scores = []
-    total_scores = 0
+    total_score = 0
     record = 0
     agent = Agent()
     game = SnakeGameAI()
@@ -115,8 +114,8 @@ def train():
         # get move
         final_move = agent.get_action(state_old)
 
-        # perform move & get new state
-        reward, done, score, = game.play_step(final_move)
+        # perform move and get new state
+        reward, done, score = game.play_step(final_move)
         state_new = agent.get_state(game)
 
         # train short memory
@@ -126,7 +125,7 @@ def train():
         agent.remember(state_old, final_move, reward, state_new, done)
 
         if done:
-            # train long memory, plot results
+            # train long memory, plot result
             game.reset()
             agent.n_games += 1
             agent.train_long_memory()
@@ -135,12 +134,11 @@ def train():
                 record = score
                 agent.model.save()
 
-            print('Game ', agent.n_games, 'Score: ', score, 'Record: ', record)
+            print('Game', agent.n_games, 'Score', score, 'Record:', record)
 
-            # Update and calculate scores
             plot_scores.append(score)
-            total_scores += score
-            mean_score = total_scores / agent.n_games
+            total_score += score
+            mean_score = total_score / agent.n_games
             plot_mean_scores.append(mean_score)
             plot(plot_scores, plot_mean_scores)
 

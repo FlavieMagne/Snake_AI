@@ -17,3 +17,7 @@ w
 G.idea/sonarlint/issuestore/9/c/9cf7d616a923bfa15117ac39e6c03ca5b6d77716,6\c\6c2e8c4cc33710365ad36a52a4f10ae567689823
 w
 G.idea/sonarlint/issuestore/2/3/233287d1c302ca8e6579b5b519a5f4fdd0e9f9a8,d\e\dec16b80e0e5b817be6b6fec84afc5d7ffb20584
+G
+pythonProject/helper.py,5\8\58430abe5227dc194a99ef8fe3cdda5ff90bf217
+F
+pythonProject/model.py,b\3\b388d4a1b90d7812162d57d624b60b139e189d19

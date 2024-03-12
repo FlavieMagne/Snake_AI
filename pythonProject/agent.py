@@ -7,7 +7,7 @@ from model import Linear_QNet, QTrainer
 from helper import plot
 
 MAX_MEMORY = 100_000
-BATCH_SIZE = 1000
+BATCH_SIZE = 1000  # taille des lots par laquelle on envoie data
 LR = 0.001
 
 
@@ -28,6 +28,7 @@ class Agent:
         point_u = Point(head.x, head.y - 20)
         point_d = Point(head.x, head.y + 20)
 
+        # Call the enum in game to choose the direction
         dir_l = game.direction == Direction.LEFT
         dir_r = game.direction == Direction.RIGHT
         dir_u = game.direction == Direction.UP
@@ -63,25 +64,30 @@ class Agent:
             game.food.x > game.head.x,  # food right
             game.food.y < game.head.y,  # food up
             game.food.y > game.head.y  # food down
+
+            # Super food location
+            # game.super_food.x < game.head.x,
+            # game.super_food.x > game.head.x,
+            # game.super_food.y < game.head.y,
+            # game.super_food.y > game.head.y
         ]
 
         return np.array(state, dtype=int)
 
     def remember(self, state, action, reward, next_state, done):
-        self.memory.append((state, action, reward, next_state, done))  # popleft if MAX_MEMORY is reached
+        # remember all status as a history
+        self.memory.append((state, action, reward, next_state, done))
 
-    def train_long_memory(self):
+    def train_long_memory(self):  # train & store data
         if len(self.memory) > BATCH_SIZE:
             mini_sample = random.sample(self.memory, BATCH_SIZE)  # list of tuples
         else:
             mini_sample = self.memory
 
-        states, actions, rewards, next_states, dones = zip(*mini_sample)
-        self.trainer.train_step(states, actions, rewards, next_states, dones)
-        # for state, action, reward, nexrt_state, done in mini_sample:
-        #    self.trainer.train_step(state, action, reward, next_state, done)
+        states, actions, rewards, next_states, dones = zip(*mini_sample)  # store data
+        self.trainer.train_step(states, actions, rewards, next_states, dones)  # train
 
-    def train_short_memory(self, state, action, reward, next_state, done):
+    def train_short_memory(self, state, action, reward, next_state, done):  # train without storing data
         self.trainer.train_step(state, action, reward, next_state, done)
 
     def get_action(self, state):
@@ -115,8 +121,8 @@ def train():
         final_move = agent.get_action(state_old)
 
         # perform move and get new state
-        reward, done, score = game.play_step(final_move)
-        state_new = agent.get_state(game)
+        reward, done, score = game.play_step(final_move)  # check if food or poison or else and get result
+        state_new = agent.get_state(game)  # direction
 
         # train short memory
         agent.train_short_memory(state_old, final_move, reward, state_new, done)
@@ -130,12 +136,14 @@ def train():
             agent.n_games += 1
             agent.train_long_memory()
 
+            # store new record
             if score > record:
                 record = score
                 agent.model.save()
 
             print('Game', agent.n_games, 'Score', score, 'Record:', record)
 
+            # plot results graph with score to see learning evolution
             plot_scores.append(score)
             total_score += score
             mean_score = total_score / agent.n_games

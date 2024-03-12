@@ -24,10 +24,8 @@ GREEN = (85, 107, 47)
 GREEN2 = (107, 142, 35)
 PINK = (255, 105, 180)
 YELLOW = (255, 215, 0)
-BLUE1 = (0, 0, 255)
-BLUE2 = (0, 100, 255)
-BLACK = (0, 0, 0)
 GREY = (192, 192, 192)
+BLACK = (0, 0, 0)
 
 BLOCK_SIZE = 20
 SPEED = 40
@@ -57,12 +55,13 @@ class SnakeGameAI:
         self.food = None
         self.super_food = None
         self.poison = None
+        self.wall = None
         self._place_food()
         self._place_super_food()
         self._place_poison()
+        self._place_wall()
         self.frame_iteration = 0
 
-    #TODO WALL
     def _place_food(self):
         x = random.randint(0, (self.w - BLOCK_SIZE) // BLOCK_SIZE) * BLOCK_SIZE
         y = random.randint(0, (self.h - BLOCK_SIZE) // BLOCK_SIZE) * BLOCK_SIZE
@@ -84,6 +83,16 @@ class SnakeGameAI:
         if self.poison in self.snake:
             self._place_poison()
 
+    def _place_wall(self):
+        # Wall position
+        x = 200
+        y = 250
+        # Wall dimensions
+        width = 20
+        height = 200
+
+        self.wall = pygame.Rect(x, y, width, height)
+
     def play_step(self, action):
         self.frame_iteration += 1
         # Quit game with user input
@@ -93,7 +102,7 @@ class SnakeGameAI:
                 quit()
 
         # Move
-        self._move(action)  # update the head
+        self._move(action)
         self.snake.insert(0, self.head)
 
         # Check if game over
@@ -116,6 +125,9 @@ class SnakeGameAI:
             reward = 20
         elif self.head == self.poison:
             reward = -20
+        elif self.head == self.wall:
+            game_over = True
+            reward = -30
         else:
             self.snake.pop()
         # Update UI and clock
@@ -128,33 +140,34 @@ class SnakeGameAI:
         if pt is None:
             pt = self.head
         # hits boundary
-        if pt.x > self.w - BLOCK_SIZE or pt.x < 0 or pt.y > self.h - BLOCK_SIZE or pt.y < 0:
+        if pt.x > self.w - BLOCK_SIZE or pt.x < 0 or pt.y > self.h - BLOCK_SIZE or pt.y < 0 or pt.x == self.wall.x:
             return True
         # hits itself
         if pt in self.snake[1:]:
             return True
-
         return False
 
     def _update_ui(self):
-        # update snake position in the frame
+        # GREY background
         self.display.fill(GREY)
 
+        # Draw snake
         for pt in self.snake:
             pygame.draw.rect(self.display, GREEN, pygame.Rect(pt.x, pt.y, BLOCK_SIZE, BLOCK_SIZE))
             pygame.draw.rect(self.display, GREEN2, pygame.Rect(pt.x + 4, pt.y + 4, 12, 12))
 
+        # Food
         pygame.draw.rect(self.display, YELLOW, pygame.Rect(self.food.x, self.food.y, BLOCK_SIZE, BLOCK_SIZE))
         pygame.draw.rect(self.display, PINK, pygame.Rect(self.super_food.x, self.super_food.y, BLOCK_SIZE, BLOCK_SIZE))
         pygame.draw.rect(self.display, RED, pygame.Rect(self.poison.x, self.poison.y, BLOCK_SIZE, BLOCK_SIZE))
+        pygame.draw.rect(self.display, BLACK, (self.wall.x, self.wall.y, self.wall.width, self.wall.height))
 
         text = font.render("Score: " + str(self.score), True, WHITE)
-        self.display.blit(text, [0, 0])
-        pygame.display.flip()
+        self.display.blit(text, [0, 0])  # display text
+        pygame.display.flip()  # Update surface on screen
 
     def _move(self, action):
-        # [straight, right, left]
-
+        # Snake's movements
         clock_wise = [Direction.RIGHT, Direction.DOWN, Direction.LEFT, Direction.UP]
         idx = clock_wise.index(self.direction)
 

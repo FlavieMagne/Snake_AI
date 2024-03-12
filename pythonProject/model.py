@@ -8,6 +8,7 @@ import os
 class Linear_QNet(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
         super().__init__()
+        # Neural network
         self.linear1 = nn.Linear(input_size, hidden_size)
         self.linear2 = nn.Linear(hidden_size, output_size)
 
@@ -18,7 +19,7 @@ class Linear_QNet(nn.Module):
 
     def save(self, file_name='model.pth'):
         model_folder_path = './model'
-        if not os.path.exists(model_folder_path):
+        if not os.path.exists(model_folder_path):  # check if exists
             os.makedirs(model_folder_path)
 
         file_name = os.path.join(model_folder_path, file_name)
@@ -31,7 +32,7 @@ class QTrainer:
         self.gamma = gamma
         self.model = model
         self.optimizer = optim.Adam(model.parameters(), lr=self.lr)
-        self.criterion = nn.MSELoss()
+        self.criterion = nn.MSELoss()  # Mean Squarred Error
 
     def train_step(self, state, action, reward, next_state, done):
         state = torch.tensor(state, dtype=torch.float)
@@ -48,24 +49,19 @@ class QTrainer:
             reward = torch.unsqueeze(reward, 0)
             done = (done,)
 
-        # 1: predicted Q values with current state
+        # Predicted Q values with current state
         pred = self.model(state)
 
-        target = pred.clone()
-        for idx in range(len(done)):
-            Q_new = reward[idx]
-            if not done[idx]:
-                Q_new = reward[idx] + self.gamma * torch.max(self.model(next_state[idx]))
+        target = pred.clone()  # copy of pred
+        for i in range(len(done)):
+            Q_new = reward[i]
+            if not done[i]:
+                Q_new = reward[i] + self.gamma * torch.max(self.model(next_state[i]))
 
-            target[idx][torch.argmax(action[idx]).item()] = Q_new
+            target[i][torch.argmax(action[i]).item()] = Q_new
 
-        # 2: Q_new = r + y * max(next_predicted Q value) -> only do this if not done
-        # pred.clone()
-        # preds[argmax(action)] = Q_new
         self.optimizer.zero_grad()
         loss = self.criterion(target, pred)
         loss.backward()
 
         self.optimizer.step()
-
-

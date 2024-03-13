@@ -35,6 +35,7 @@ class QTrainer:
         self.criterion = nn.MSELoss()  # Mean Squarred Error
 
     def train_step(self, state, action, reward, next_state, done):
+        # Convert inputs to PyTorch tensors
         state = torch.tensor(state, dtype=torch.float)
         next_state = torch.tensor(next_state, dtype=torch.float)
         action = torch.tensor(action, dtype=torch.long)
@@ -42,7 +43,8 @@ class QTrainer:
         # (n, x)
 
         if len(state.shape) == 1:
-            # (1, x)
+            # If state is a vector, add a batch dimension
+            # torch.unsqueeze(input, dimension)
             state = torch.unsqueeze(state, 0)
             next_state = torch.unsqueeze(next_state, 0)
             action = torch.unsqueeze(action, 0)
@@ -52,15 +54,20 @@ class QTrainer:
         # Predicted Q values with current state
         pred = self.model(state)
 
-        target = pred.clone()  # copy of pred
+        # Create a copy of predicted values for target values
+        target = pred.clone()
         for i in range(len(done)):
             Q_new = reward[i]
             if not done[i]:
+                # Update Q-value using Bellman equation: Q(s,a)=r+γ.max Q(s',a')
                 Q_new = reward[i] + self.gamma * torch.max(self.model(next_state[i]))
 
+            # Update the target Q-value for the action taken
             target[i][torch.argmax(action[i]).item()] = Q_new
 
+        # Zero gradients, perform a backward pass, and update the weights
         self.optimizer.zero_grad()
+        # Calculate the loss between predicted Q-values and target Q-values
         loss = self.criterion(target, pred)
         loss.backward()
 

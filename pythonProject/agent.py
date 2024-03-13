@@ -5,9 +5,10 @@ from collections import deque
 from game import SnakeGameAI, Direction, Point
 from model import Linear_QNet, QTrainer
 from helper import plot
+from pythonProject import game
 
 MAX_MEMORY = 100_000
-BATCH_SIZE = 1000  # taille des lots par laquelle on envoie data
+BATCH_SIZE = 1000
 LR = 0.001
 
 
@@ -18,7 +19,7 @@ class Agent:
         self.epsilon = 0  # randomness
         self.gamma = 0.9  # discount rate
         self.memory = deque(maxlen=MAX_MEMORY)  # popleft()
-        self.model = Linear_QNet(11, 256, 3)
+        self.model = Linear_QNet(15, 256, 3)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
     def get_state(self, game):
@@ -63,13 +64,13 @@ class Agent:
             game.food.x < game.head.x,  # food left
             game.food.x > game.head.x,  # food right
             game.food.y < game.head.y,  # food up
-            game.food.y > game.head.y  # food down
+            game.food.y > game.head.y,  # food down
 
             # Super food location
-            # game.super_food.x < game.head.x,
-            # game.super_food.x > game.head.x,
-            # game.super_food.y < game.head.y,
-            # game.super_food.y > game.head.y
+            game.super_food.x < game.head.x,
+            game.super_food.x > game.head.x,
+            game.super_food.y < game.head.y,
+            game.super_food.y > game.head.y
         ]
 
         return np.array(state, dtype=int)
@@ -119,7 +120,6 @@ def train():
 
         # get move
         final_move = agent.get_action(state_old)
-
         # perform move and get new state
         reward, done, score = game.play_step(final_move)  # check if food or poison or else and get result
         state_new = agent.get_state(game)  # direction

@@ -117,17 +117,19 @@ class SnakeGameAI:
         # Reward snake if eating food or super_food
         if self.head == self.food:  # If the snake eats food
             self.score += 1
-            reward = 10
-            print(reward)
+            reward = 30
             self._place_food()
         elif self.head == self.super_food:
             self.score += 2
-            reward = 20
+            reward = 40
+            self._place_super_food()
         elif self.head == self.poison:
-            reward = -20
-        elif self.head == self.wall:
-            game_over = True
+            self.score -= 10
             reward = -30
+            self._place_poison()
+        elif self.head == self.wall:
+            reward = -50
+            game_over = True
         else:
             self.snake.pop()
         # Update UI and clock
@@ -140,7 +142,8 @@ class SnakeGameAI:
         if pt is None:
             pt = self.head
         # hits boundary
-        if pt.x > self.w - BLOCK_SIZE or pt.x < 0 or pt.y > self.h - BLOCK_SIZE or pt.y < 0 or pt.x == self.wall.x:
+        if (pt.x > self.w - BLOCK_SIZE or pt.x < 0 or pt.y > self.h - BLOCK_SIZE or pt.y < 0 or pt.x == self.wall.x or
+                (pt.x == self.wall.x and pt.y >= self.wall.y and pt.y <= self.wall.y + self.wall.height)):
             return True
         # hits itself
         if pt in self.snake[1:]:

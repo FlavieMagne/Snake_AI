@@ -3,11 +3,10 @@ import random
 import numpy as np
 from enum import Enum
 from collections import namedtuple
-import os
-print(os.listdir("."))
+
 
 pygame.init()
-font = pygame.font.Font('./pythonProject/arial.ttf', 25)
+font = pygame.font.Font('src/assets/arial.ttf', 25)
 
 
 class Direction(Enum):

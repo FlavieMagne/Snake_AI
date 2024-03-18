@@ -17,8 +17,7 @@ class Linear_QNet(nn.Module):
         return x
 
     def save(self):
-        h5py.File('./model.hdf5', 'w')
-
+        h5py.File('src/models/model.hdf5', 'w')
 
 
 class QTrainer:

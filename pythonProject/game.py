@@ -3,9 +3,11 @@ import random
 import numpy as np
 from enum import Enum
 from collections import namedtuple
+import os
+print(os.listdir("."))
 
 pygame.init()
-font = pygame.font.Font('arial.ttf', 25)
+font = pygame.font.Font('./pythonProject/arial.ttf', 25)
 
 
 class Direction(Enum):
@@ -124,12 +126,9 @@ class SnakeGameAI:
             reward = 40
             self._place_super_food()
         elif self.head == self.poison:
-            self.score -= 10
+            self.score -= 2
             reward = -30
             self._place_poison()
-        elif self.head == self.wall:
-            reward = -50
-            game_over = True
         else:
             self.snake.pop()
         # Update UI and clock
@@ -141,7 +140,7 @@ class SnakeGameAI:
     def is_collision(self, pt=None):
         if pt is None:
             pt = self.head
-        # hits boundary
+        # hits boundary and wall
         if (pt.x > self.w - BLOCK_SIZE or pt.x < 0 or pt.y > self.h - BLOCK_SIZE or pt.y < 0 or pt.x == self.wall.x or
                 (pt.x == self.wall.x and pt.y >= self.wall.y and pt.y <= self.wall.y + self.wall.height)):
             return True
